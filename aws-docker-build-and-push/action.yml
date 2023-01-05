@@ -1,0 +1,58 @@
+name: Docker build and push
+description: Build docker image and push it
+
+inputs:
+  ENVIRONMENT:
+    required: true
+    description: 'Which environment: dev, qa, stg, prod'
+  CLIENT:
+    required: true
+    description: 'Which client: default, google ...'
+  PROJECT:
+    required: true
+    description: 'backend, infra'
+  AWS_ACCESS_KEY_ID:
+    required: true
+    description: 'AWS account Access Key'
+  AWS_SECRET_ACCESS_KEY:
+    required: true
+    description: 'AWS account Secret Key'
+  CONTAINER_REGISTRY_URL:
+    required: true
+    description: 'ecr'
+  ACCOUNT_ID:
+    required: true
+    description: 'AWS Account ID'
+  AWS_REGION:
+    required: true
+    description: 'AWS Region'
+  DOCKER_CONTAINER_NAME:
+    required: true
+    description: 'docker container name'
+  REPO_WORKING_DIR:
+    required: true
+    description: 'Folder with the Dockerfile'
+
+runs:
+  using: composite
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ inputs.AWS_REGION }}
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ inputs.REPO_WORKING_DIR }}
+        push: true
+        tags: |
+          ${{ inputs.ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.DOCKER_CONTAINER_NAME }}:${{ github.sha }}
+          ${{ inputs.ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.DOCKER_CONTAINER_NAME }}:latest
+        cache-from: type=registry,ref=${{ inputs.ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.DOCKER_CONTAINER_NAME }}:latest
+        cache-to: type=inline
