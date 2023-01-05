@@ -17,9 +17,6 @@ inputs:
   AWS_SECRET_ACCESS_KEY:
     required: true
     description: 'AWS account Secret Key'
-  CONTAINER_REGISTRY_URL:
-    required: true
-    description: 'ecr'
   ACCOUNT_ID:
     required: true
     description: 'AWS Account ID'
